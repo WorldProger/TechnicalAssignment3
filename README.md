@@ -1,14 +1,3 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
-
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
-
-* `/iosApp` contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform, 
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
-
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Задача 3. Использование Open Source библиотек
+Необходимо предоставить взаимодействие с библиотекой Zxing, для сканирования и генерации бар-кодов. Проблема на текущий момент такая, что нет представленной реализации в Open-Source или компании Google для KMP. Вашей задачей будет внедрить в модули Android и IOS общий метод, создающий сканер баркода, и после успешного сканирования - предоставления результата на экран. Возможный вид решения представлен на изображении. (Контрольная проверка: запуск App, открытие сканера, получение данных, закрыть App).
+Если же есть модуль или решение для KMP на момент решения, то необходимо решить задачу, не используя очевидного использования библиотеки, а создание своего метода. Уточнение: к примеру, библиотека zxing сделанная только для android и отдельно для ios разрешены, ведь на текущий момент нет общей реализации.

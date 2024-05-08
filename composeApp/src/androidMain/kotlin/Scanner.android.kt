@@ -1,15 +1,16 @@
-import android.Manifest
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.util.Log
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 
 @Composable
@@ -21,53 +22,44 @@ actual fun Scanner(
         BarCodeAnalyzer(onCodeScanned = onScanned)
     }
 
-    AndroidScannerView(modifier, analyzer)
-}
+    val localContext = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-@Composable
-actual fun rememberCameraPermissionState(): CameraPermissionState {
-
-    val cameraPermission = Manifest.permission.CAMERA
-    val context = LocalContext.current
-
-    // Create a state to hold the permission status
-    val permissionStatus = remember { mutableStateOf(CameraPermissionStatus.Denied) }
-
-    LaunchedEffect(Unit) {
-        // Check if the permission is already granted
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            cameraPermission,
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            permissionStatus.value = CameraPermissionStatus.Granted
-        }
+    val cameraProviderFuture = remember {
+        ProcessCameraProvider.getInstance(localContext)
     }
 
-    // Create a launcher for the permission request
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        permissionStatus.value = if (isGranted) {
-            CameraPermissionStatus.Granted
-        } else {
-            CameraPermissionStatus.Denied
-        }
-    }
+    AndroidView(
+        modifier = modifier.fillMaxSize(),
+        factory = { context ->
 
-    return object : CameraPermissionState {
-        override val status: CameraPermissionStatus
-            get() = permissionStatus.value
+            val previewView = PreviewView(context)
+            val preview = Preview.Builder().build()
+            val selector = CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                .build()
 
-        override fun requestCameraPermission() {
-            launcher.launch(cameraPermission)
-        }
+            preview.setSurfaceProvider(previewView.surfaceProvider)
 
-        override fun goToSettings() {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            intent.data = Uri.parse("package:" + context.packageName)
-            ContextCompat.startActivity(context, intent, null)
+            val imageAnalysis = ImageAnalysis.Builder().build()
+            imageAnalysis.setAnalyzer(
+                ContextCompat.getMainExecutor(context),
+                analyzer
+            )
+
+            runCatching {
+                cameraProviderFuture.get().unbindAll()
+                cameraProviderFuture.get().bindToLifecycle(
+                    lifecycleOwner,
+                    selector,
+                    preview,
+                    imageAnalysis
+                )
+            }.onFailure {
+                Log.e("CAMERA", "Camera bind error ${it.localizedMessage}", it)
+            }
+
+            previewView
         }
-    }
+    )
 }

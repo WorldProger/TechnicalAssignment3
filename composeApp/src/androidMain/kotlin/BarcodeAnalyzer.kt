@@ -10,11 +10,13 @@ import com.google.zxing.common.HybridBinarizer
 import java.nio.ByteBuffer
 
 class BarCodeAnalyzer(
-    private val formats: Array<BarcodeFormat> = arrayOf(
-        BarcodeFormat.CODE_128,
+    private val formats: List<BarcodeFormat> = listOf(
+        BarcodeFormat.AZTEC,
+        BarcodeFormat.CODABAR,
         BarcodeFormat.CODE_39,
         BarcodeFormat.CODE_93,
-        BarcodeFormat.CODABAR,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.QR_CODE,
     ),
     private val onCodeScanned: (String) -> Boolean
 ) : ImageAnalysis.Analyzer {
@@ -44,7 +46,7 @@ class BarCodeAnalyzer(
                 val result = MultiFormatReader().apply {
                     setHints(
                         mapOf(
-                            DecodeHintType.POSSIBLE_FORMATS to BarcodeFormat.entries
+                            DecodeHintType.POSSIBLE_FORMATS to formats
                         )
                     )
                 }.decode(binaryBmp)

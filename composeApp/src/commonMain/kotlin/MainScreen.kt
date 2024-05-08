@@ -1,7 +1,4 @@
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,12 +38,11 @@ fun MainScreen() {
 
             AnimatedContent(
                 targetState = scannerEnabled,
-                transitionSpec = { fadeIn() togetherWith fadeOut() }
+                contentAlignment = Alignment.Center
             ) { enabled ->
                 if (enabled) {
                     ScannerView(
                         modifier = Modifier
-                            .padding(16.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .size(250.dp),
                         onScanned = {
